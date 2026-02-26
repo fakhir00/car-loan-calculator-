@@ -2,8 +2,8 @@
     --bg-color: #0f172a;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --accent: #38bdf8;
-    --accent-hover: #0ea5e9;
+    --accent: #f97316;
+    --accent-hover: #ea580c;
     --card-bg: rgba(30, 41, 59, 0.4);
     --border-light: rgba(255, 255, 255, 0.1);
 }
@@ -36,7 +36,7 @@ body {
 .shape-1 {
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(56, 189, 248, 0) 70%);
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.4) 0%, rgba(249, 115, 22, 0) 70%);
     top: -100px;
     left: -100px;
 }
@@ -44,7 +44,7 @@ body {
 .shape-2 {
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0) 70%);
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 70%);
     bottom: -200px;
     right: -200px;
     animation-delay: -5s;
@@ -61,8 +61,13 @@ body {
 }
 
 @keyframes float {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(30px, -50px) scale(1.1); }
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
 }
 
 .container {
@@ -151,7 +156,8 @@ nav a:hover {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
-.input-section h3, .results-section h3 {
+.input-section h3,
+.results-section h3 {
     font-size: 1.5rem;
     margin-bottom: 30px;
     color: var(--text-main);
@@ -189,7 +195,7 @@ nav a:hover {
 
 .input-group input[type="number"]:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
 }
 
 /* Range Slider */
@@ -216,7 +222,7 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 50%;
     background: var(--accent);
     cursor: pointer;
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
     transition: transform 0.2s ease;
 }
 
@@ -235,7 +241,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     text-align: center;
     margin-bottom: 30px;
     padding: 20px;
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(139, 92, 246, 0.1));
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(59, 130, 246, 0.1));
     border-radius: 16px;
     border: 1px solid var(--border-light);
 }
@@ -368,13 +374,16 @@ footer p {
     .calculator-container {
         grid-template-columns: 1fr;
     }
+
     .hero h2 {
         font-size: 2.5rem;
     }
+
     .secondary-results {
         flex-direction: column;
     }
 }
+
 @media (max-width: 600px) {
     .content-section {
         padding: 40px 20px;

@@ -12,7 +12,7 @@ const formatCurrency = (amount) => {
 // Auto format numbers as they are typed
 const inputs = document.querySelectorAll('input[type="number"]');
 inputs.forEach(input => {
-    input.addEventListener('focus', function() {
+    input.addEventListener('focus', function () {
         if (this.value === '0') this.value = '';
     });
 });
@@ -73,16 +73,16 @@ function calculateLoan() {
 // Update or initialize the Chart.js pie chart
 function updateChart(principal, totalInterest) {
     const ctx = document.getElementById('loanChart').getContext('2d');
-    
+
     // Gradient for Principal
     const gradientPrincipal = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientPrincipal.addColorStop(0, 'rgba(56, 189, 248, 1)');
-    gradientPrincipal.addColorStop(1, 'rgba(56, 189, 248, 0.6)');
+    gradientPrincipal.addColorStop(0, 'rgba(59, 130, 246, 1)');
+    gradientPrincipal.addColorStop(1, 'rgba(59, 130, 246, 0.6)');
 
     // Gradient for Interest
     const gradientInterest = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientInterest.addColorStop(0, 'rgba(139, 92, 246, 1)');
-    gradientInterest.addColorStop(1, 'rgba(139, 92, 246, 0.6)');
+    gradientInterest.addColorStop(0, 'rgba(249, 115, 22, 1)');
+    gradientInterest.addColorStop(1, 'rgba(249, 115, 22, 0.6)');
 
     const data = {
         labels: ['Total Principal', 'Total Interest'],
@@ -123,7 +123,7 @@ function updateChart(principal, totalInterest) {
                     cornerRadius: 8,
                     displayColors: false,
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return context.label + ': ' + formatCurrency(context.raw);
                         }
                     }
