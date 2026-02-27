@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DrivePredict - Advanced Car Loan Predictor</title>
-    <meta name="description"
-        content="Calculate your car loan payments instantly with our dynamic, interactive predictor. Explore total costs, interest rates, and more with stunning visualizations.">
+    <meta name="description" content="Calculate your car loan payments instantly with our dynamic, interactive predictor. Explore total costs, interest rates, and more with stunning visualizations.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-
-<body>
+<body data-theme="light">
     <!-- Background Elements for Glassmorphism -->
     <div class="blob shape-1"></div>
     <div class="blob shape-2"></div>
@@ -24,9 +23,21 @@
     <header>
         <div class="container">
             <h1 class="logo">Drive<span>Predict</span></h1>
-            <nav>
-                <a href="#calculator">Calculator</a>
-                <a href="#insights">Insights</a>
+            <nav class="nav-controls">
+                <div class="text-scaler">
+                    <button onclick="scaleText(0.8)" title="Decrease Font Size">A-</button>
+                    <button onclick="scaleText(1)" title="Default Font Size">A</button>
+                    <button onclick="scaleText(1.2)" title="Increase Font Size">A+</button>
+                    <button onclick="scaleText(1.4)" title="Max Font Size">A++</button>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+                <div class="export-controls">
+                    <button onclick="copySummary()" title="Copy Summary to Clipboard"><i class="fas fa-copy"></i></button>
+                    <button onclick="shareLink()" title="Share Configured Link"><i class="fas fa-link"></i></button>
+                    <button onclick="window.print()" title="Print / PDF"><i class="fas fa-print"></i></button>
+                </div>
             </nav>
         </div>
     </header>
@@ -34,64 +45,179 @@
     <main class="container">
         <section class="hero text-center">
             <h2>Plan Your Next Vehicle with Precision.</h2>
-            <p>Experience the ultimate car loan prediction tool. Interactive graphs, dynamic insights, and all the
-                clarity you need to hit the road confidently.</p>
+            <p>Experience the ultimate car loan prediction tool. Interactive graphs, dynamic insights, and all the clarity you need to hit the road confidently.</p>
         </section>
 
+        <!-- Mode Switcher Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('standard')" id="tab-standard">Standard Predictor</button>
+            <button class="mode-tab" onclick="switchMode('compare')" id="tab-compare">Compare Loans</button>
+            <button class="mode-tab" onclick="switchMode('affordability')" id="tab-affordability">Affordability</button>
+        </div>
+
         <section id="calculator" class="calculator-container glass">
-            <div class="input-section">
-                <h3>Loan Details</h3>
-                <div class="input-group">
-                    <label for="car-price">Car Price ($)</label>
-                    <input type="number" id="car-price" placeholder="e.g., 35000" value="35000"
-                        oninput="calculateLoan()">
-                </div>
+            <!-- Inputs Area (Handles single or side-by-side) -->
+            <div id="inputs-wrapper" class="inputs-wrapper">
+                
+                <!-- Scenario A (Standard) -->
+                <div class="input-section" id="standard-inputs">
+                    <h3>Loan Details <span id="scenario-a-badge" class="badge hidden">Scenario A</span></h3>
+                    <div class="input-group">
+                        <label for="car-price">Car Price ($)</label>
+                        <input type="number" id="car-price" placeholder="e.g., 35000" value="35000" oninput="triggerCalculation()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="down-payment">Down Payment / Trade-in ($)</label>
+                        <input type="number" id="down-payment" placeholder="e.g., 5000" value="5000" oninput="triggerCalculation()">
+                    </div>
 
-                <div class="input-group">
-                    <label for="down-payment">Down Payment ($)</label>
-                    <input type="number" id="down-payment" placeholder="e.g., 5000" value="5000"
-                        oninput="calculateLoan()">
-                </div>
+                    <div class="input-group">
+                        <label for="loan-term">Loan Term (Months)</label>
+                        <div class="range-container">
+                            <input type="range" id="loan-term" min="12" max="84" step="12" value="60" oninput="updateTermDisplay(); triggerCalculation()">
+                            <span id="term-display">60 months</span>
+                        </div>
+                    </div>
 
-                <div class="input-group">
-                    <label for="loan-term">Loan Term (Months)</label>
-                    <div class="range-container">
-                        <input type="range" id="loan-term" min="12" max="84" step="12" value="60"
-                            oninput="updateTermDisplay(); calculateLoan()">
-                        <span id="term-display">60 months</span>
+                    <div class="input-group">
+                        <label for="interest-rate">Interest Rate (%)</label>
+                        <input type="number" id="interest-rate" step="0.1" placeholder="e.g., 4.5" value="4.5" oninput="triggerCalculation()">
+                    </div>
+
+                    <hr class="divider">
+                    
+                    <h3>Advanced Planning <span class="badge">Optional</span></h3>
+                    
+                    <div class="input-group toggle-group">
+                        <label for="bi-weekly">Bi-Weekly Payments (26/year)</label>
+                        <label class="switch">
+                            <input type="checkbox" id="bi-weekly" onchange="triggerCalculation()">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="early-payoff">Extra Monthly Payment ($)</label>
+                        <input type="number" id="early-payoff" placeholder="e.g., 100" value="0" oninput="triggerCalculation()">
+                        <small>See how fast you can clear your debt.</small>
+                    </div>
+
+                    <hr class="divider" id="tco-divider">
+
+                    <h3 id="tco-title">Total Cost of Ownership (Monthly) <span class="badge">Optional</span></h3>
+                    <div class="tco-grid" id="tco-grid-container">
+                        <div class="input-group">
+                            <label for="tco-insurance">Insurance ($)</label>
+                            <input type="number" id="tco-insurance" placeholder="150" value="0" oninput="triggerCalculation()">
+                        </div>
+                        <div class="input-group">
+                            <label for="tco-fuel">Fuel ($)</label>
+                            <input type="number" id="tco-fuel" placeholder="100" value="0" oninput="triggerCalculation()">
+                        </div>
+                        <div class="input-group">
+                            <label for="tco-maint">Maintenance ($)</label>
+                            <input type="number" id="tco-maint" placeholder="50" value="0" oninput="triggerCalculation()">
+                        </div>
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="interest-rate">Interest Rate (%)</label>
-                    <input type="number" id="interest-rate" step="0.1" placeholder="e.g., 4.5" value="4.5"
-                        oninput="calculateLoan()">
+                <!-- Scenario B (Comparison Only) -->
+                <div class="input-section hidden" id="scenario-b-inputs">
+                    <h3>Loan Details <span class="badge">Scenario B</span></h3>
+                    <div class="input-group">
+                        <label for="car-price-b">Car Price ($)</label>
+                        <input type="number" id="car-price-b" placeholder="e.g., 35000" value="35000" oninput="triggerCalculation()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="down-payment-b">Down Payment / Trade-in ($)</label>
+                        <input type="number" id="down-payment-b" placeholder="e.g., 5000" value="5000" oninput="triggerCalculation()">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="loan-term-b">Loan Term (Months)</label>
+                        <div class="range-container">
+                            <input type="range" id="loan-term-b" min="12" max="84" step="12" value="72" oninput="updateTermBDisplay(); triggerCalculation()">
+                            <span id="term-display-b">72 months</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="interest-rate-b">Interest Rate (%)</label>
+                        <input type="number" id="interest-rate-b" step="0.1" placeholder="e.g., 5.5" value="5.5" oninput="triggerCalculation()">
+                    </div>
                 </div>
+
+                <!-- Affordability Mode Inputs (Hidden by Default) -->
+                <div class="input-section hidden" id="affordability-inputs">
+                    <h3>Affordability Reverse-Calculator</h3>
+                    <p class="mode-desc" style="color: var(--text-muted); margin-bottom: 20px;">Enter your target monthly budget to find the maximum vehicle price you can afford.</p>
+                    
+                    <div class="input-group">
+                        <label for="target-budget">Target Monthly Budget ($)</label>
+                        <input type="number" id="target-budget" placeholder="e.g., 500" value="500" oninput="triggerCalculation()">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="afford-down-payment">Available Down Payment ($)</label>
+                        <input type="number" id="afford-down-payment" placeholder="e.g., 5000" value="5000" oninput="triggerCalculation()">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="afford-term">Desired Loan Term (Months)</label>
+                        <div class="range-container">
+                            <input type="range" id="afford-term" min="12" max="84" step="12" value="60" oninput="updateAffordTermDisplay(); triggerCalculation()">
+                            <span id="afford-term-display">60 months</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="afford-rate">Expected Interest Rate (%)</label>
+                        <input type="number" id="afford-rate" step="0.1" placeholder="e.g., 4.5" value="4.5" oninput="triggerCalculation()">
+                    </div>
+                </div>
+
             </div>
 
             <div class="results-section">
-                <h3>Your Prediction</h3>
+                <h3 id="result-title">Your Base Prediction</h3>
                 <div class="primary-result">
-                    <h4 id="monthly-payment">$559.29</h4>
-                    <span>Estimated Monthly Payment</span>
+                    <h4 id="main-result-value">$0.00</h4>
+                    <span id="main-result-label">Estimated Monthly Payment</span>
+                    <div id="biweekly-note" class="hidden note text-accent">Bi-Weekly Payment: <span id="biweekly-amount"></span></div>
+                    <div id="tco-note" class="hidden note text-alert">Total Monthly Cost (incl. TCO): <span id="tco-amount"></span></div>
                 </div>
-
+                
                 <div class="chart-container">
                     <canvas id="loanChart"></canvas>
                 </div>
 
                 <div class="secondary-results">
                     <div class="result-card glass-card">
-                        <span>Total Principal</span>
-                        <h5 id="total-principal">$30,000.00</h5>
+                        <span id="card-1-label">Total Principal</span>
+                        <h5 id="card-1-val">$0.00</h5>
                     </div>
                     <div class="result-card glass-card">
-                        <span>Total Interest</span>
-                        <h5 id="total-interest">$3,557.40</h5>
+                        <span id="card-2-label">Total Interest</span>
+                        <h5 id="card-2-val">$0.00</h5>
                     </div>
                     <div class="result-card glass-card">
-                        <span>Total Cost</span>
-                        <h5 id="total-cost">$33,557.40</h5>
+                        <span id="card-3-label">Total Cost</span>
+                        <h5 id="card-3-val">$0.00</h5>
+                    </div>
+                </div>
+
+                <div id="early-payoff-results" class="hidden early-payoff-banner glass-card mt-4">
+                    <h5>Early Payoff Impact</h5>
+                    <p>With <span id="extra-pmt-display" class="bold"></span> extra per month, you will save <span id="interest-saved-display" class="bold text-accent"></span> in interest and pay off your loan <span id="months-saved-display" class="bold text-accent"></span> months earlier.</p>
+                </div>
+
+                <hr class="divider">
+                <div class="full-width-charts">
+                    <h5 class="chart-title">Amortization Schedule</h5>
+                    <div class="chart-container large-chart">
+                        <canvas id="amortizationChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -102,21 +228,15 @@
             <div class="grid-content">
                 <div class="content-card">
                     <h3>Understand the True Cost</h3>
-                    <p>Many buyers focus solely on the monthly payment. Our interactive predictor instantly breaks down
-                        how much of your money goes towards the principal versus the interest over the lifetime of your
-                        loan, allowing you to see the real price of your dream car.</p>
+                    <p>Many buyers focus solely on the monthly payment. Our interactive predictor instantly breaks down how much of your money goes towards the principal versus the interest over the lifetime of your loan, allowing you to see the real price of your dream car.</p>
                 </div>
                 <div class="content-card">
                     <h3>Optimize Your Term</h3>
-                    <p>Extending a loan from 60 to 72 months might lower your monthly bills, but drastically increases
-                        your total interest paid. Use the dynamic slider above to easily visualize the trade-offs and
-                        find the financial sweet spot that fits your budget.</p>
+                    <p>Extending a loan from 60 to 72 months might lower your monthly bills, but drastically increases your total interest paid. Use the dynamic slider above to easily visualize the trade-offs and find the financial sweet spot that fits your budget.</p>
                 </div>
                 <div class="content-card">
                     <h3>Plan Your Down Payment</h3>
-                    <p>Putting more money down upfront reduces the principal amount you need to borrow. Experiment with
-                        the down payment field to see exactly how your upfront investment shrinks your long-term
-                        obligations and safeguards your financial future.</p>
+                    <p>Putting more money down upfront reduces the principal amount you need to borrow. Experiment with the down payment field to see exactly how your upfront investment shrinks your long-term obligations and safeguards your financial future.</p>
                 </div>
             </div>
         </section>
@@ -130,5 +250,4 @@
 
     <script src="script.js"></script>
 </body>
-
 </html>
