@@ -417,6 +417,17 @@ input:checked+.slider:before {
     box-shadow: var(--shadow-lg);
 }
 
+.inputs-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputs-wrapper.compare-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
 .calculator-container:hover {
     transform: translateY(-5px);
 }

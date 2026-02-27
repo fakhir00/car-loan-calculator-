@@ -61,11 +61,28 @@ function switchMode(mode) {
         document.getElementById('biweekly-note').classList.add('hidden');
         document.getElementById('tco-note').classList.add('hidden');
         document.getElementById('early-payoff-results').classList.add('hidden');
+        document.getElementById('inputs-wrapper').classList.remove('compare-mode');
+        document.getElementById('scenario-b-inputs').classList.add('hidden');
+        document.getElementById('scenario-a-badge').classList.add('hidden');
+    } else if (mode === 'compare') {
+        document.getElementById('inputs-wrapper').classList.add('compare-mode');
+        document.getElementById('scenario-b-inputs').classList.remove('hidden');
+        document.getElementById('scenario-a-badge').classList.remove('hidden');
+        document.getElementById('card-1-label').textContent = "Total Principal";
+        document.getElementById('result-title').textContent = "Scenario A vs Scenario B";
     } else {
         document.getElementById('card-1-label').textContent = "Total Principal";
+        document.getElementById('inputs-wrapper').classList.remove('compare-mode');
+        document.getElementById('scenario-b-inputs').classList.add('hidden');
+        document.getElementById('scenario-a-badge').classList.add('hidden');
     }
 
     triggerCalculation();
+}
+
+function updateTermBDisplay() {
+    const term = document.getElementById('loan-term-b').value;
+    document.getElementById('term-display-b').textContent = `${term} months`;
 }
 
 // Standard Core Calculation
@@ -156,12 +173,38 @@ function calculateLoan() {
     }
 
     // --- Update Standard DOM Elements ---
-    document.getElementById('main-result-value').textContent = formatCurrency(baseMonthlyPayment);
-    document.getElementById('card-1-val').textContent = formatCurrency(originalPrincipal);
-    document.getElementById('card-2-val').textContent = formatCurrency(totalInterest);
-    document.getElementById('card-3-val').textContent = formatCurrency(totalCost);
+    let resultValue = formatCurrency(baseMonthlyPayment);
+    if (currentMode === 'compare') {
+        const pmB = simulateLoan(
+            parseFloat(document.getElementById('car-price-b').value) || 0,
+            parseFloat(document.getElementById('down-payment-b').value) || 0,
+            parseFloat(document.getElementById('interest-rate-b').value) || 0,
+            parseInt(document.getElementById('loan-term-b').value)
+        );
+        resultValue = `${formatCurrency(baseMonthlyPayment)} vs ${formatCurrency(pmB.pmt)}`;
 
-    // Bi-Weekly Note
+        document.getElementById('card-1-val').textContent = `${formatCurrency(originalPrincipal)} vs ${formatCurrency(pmB.principal)}`;
+        document.getElementById('card-2-val').textContent = `${formatCurrency(totalInterest)} vs ${formatCurrency(pmB.interest)}`;
+        document.getElementById('card-3-val').textContent = `${formatCurrency(totalCost)} vs ${formatCurrency(pmB.cost)}`;
+
+        updateChart(originalPrincipal, totalInterest, pmB.principal, pmB.interest);
+        if (document.getElementById('amortizationChart')) {
+            updateAmortizationChartCompare(labelsAmortization, dataBalance, pmB.labels, pmB.balances);
+        }
+    } else {
+        document.getElementById('card-1-val').textContent = formatCurrency(originalPrincipal);
+        document.getElementById('card-2-val').textContent = formatCurrency(totalInterest);
+        document.getElementById('card-3-val').textContent = formatCurrency(totalCost);
+
+        // Update the Charts
+        updateChart(originalPrincipal, totalInterest);
+        if (document.getElementById('amortizationChart')) {
+            updateAmortizationChart(labelsAmortization, dataBalance);
+        }
+    }
+    document.getElementById('main-result-value').textContent = resultValue;
+
+    // Bi-Weekly Note (Scenario A Only for simplicity)
     if (isBiWeekly && baseMonthlyPayment > 0) {
         document.getElementById('biweekly-amount').textContent = formatCurrency(biWeeklyDisplay);
         document.getElementById('biweekly-note').classList.remove('hidden');
@@ -236,8 +279,51 @@ function calculateAffordability() {
     updateChart(maxLoanAmount, totalInterest > 0 ? totalInterest : 0);
 }
 
+// Background simulation for Scenario B
+function simulateLoan(price, downPayment, annualRate, termValue) {
+    const originalPrincipal = Math.max(0, price - downPayment);
+    const monthlyRate = (annualRate / 100) / 12;
+    const numberOfPayments = termValue;
+
+    let pmt = 0;
+    if (monthlyRate === 0) {
+        pmt = originalPrincipal / numberOfPayments;
+    } else if (originalPrincipal > 0 && numberOfPayments > 0) {
+        const x = Math.pow(1 + monthlyRate, numberOfPayments);
+        pmt = (originalPrincipal * x * monthlyRate) / (x - 1);
+    }
+
+    if (!isFinite(pmt) || isNaN(pmt)) pmt = 0;
+
+    let totalCost = pmt * numberOfPayments;
+    let totalInterest = totalCost - originalPrincipal;
+
+    let labels = [];
+    let balances = [];
+
+    if (originalPrincipal > 0 && pmt > 0) {
+        let balance = originalPrincipal;
+        for (let i = 1; i <= numberOfPayments; i++) {
+            const interestForMonth = balance * monthlyRate;
+            const principalForMonth = pmt - interestForMonth;
+            balance -= principalForMonth;
+            if (balance < 0) balance = 0;
+
+            if (i % 6 === 0 || i === numberOfPayments) {
+                labels.push(`Month ${i}`);
+                balances.push(balance);
+            }
+        }
+    } else {
+        labels = ['Month 0', `Month ${numberOfPayments}`];
+        balances = [originalPrincipal, 0];
+    }
+
+    return { pmt, principal: originalPrincipal, interest: totalInterest, cost: totalCost, labels, balances };
+}
+
 // Update or initialize the Chart.js pie chart
-function updateChart(principal, totalInterest) {
+function updateChart(principal, totalInterest, principalB = null, interestB = null) {
     const ctx = document.getElementById('loanChart').getContext('2d');
 
     // Check Theme for Legend Colors
@@ -257,14 +343,35 @@ function updateChart(principal, totalInterest) {
     gradientInterest.addColorStop(0, '#ec4899');
     gradientInterest.addColorStop(1, '#f472b6');
 
-    const data = {
-        labels: currentMode === 'standard' ? ['Total Principal', 'Total Interest'] : ['Max Loan Amount', 'Total Interest'],
-        datasets: [{
-            data: [principal, totalInterest],
-            backgroundColor: [gradientPrincipal, gradientInterest],
+    // Scenario B Gradients
+    const gradientPrinB = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientPrinB.addColorStop(0, '#10b981'); // Emerald Green
+    gradientPrinB.addColorStop(1, '#34d399');
+
+    const gradientIntB = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientIntB.addColorStop(0, '#f59e0b'); // Amber
+    gradientIntB.addColorStop(1, '#fbbf24');
+
+    let datasets = [{
+        data: [principal, totalInterest],
+        backgroundColor: [gradientPrincipal, gradientInterest],
+        borderWidth: 0,
+        hoverOffset: 10
+    }];
+
+    if (principalB !== null && interestB !== null) {
+        datasets.push({
+            data: [principalB, interestB],
+            backgroundColor: [gradientPrinB, gradientIntB],
             borderWidth: 0,
             hoverOffset: 10
-        }]
+        });
+    }
+
+    const data = {
+        labels: currentMode === 'standard' ? ['Total Principal', 'Total Interest'] :
+            (currentMode === 'compare' ? ['Principal', 'Interest'] : ['Max Loan Amount', 'Total Interest']),
+        datasets: datasets
     };
 
     const config = {
@@ -412,6 +519,128 @@ function updateAmortizationChart(labels, balances) {
         amortizationChartInstance.options.scales.y.ticks.color = textColor;
         amortizationChartInstance.options.scales.y.grid.color = gridColor;
         amortizationChartInstance.options.plugins.tooltip = config.options.plugins.tooltip;
+        amortizationChartInstance.update();
+    } else {
+        amortizationChartInstance = new Chart(ctx, config);
+    }
+}
+
+// Compare Mode Amortization Line Chart
+function updateAmortizationChartCompare(labelsA, balancesA, labelsB, balancesB) {
+    const ctx = document.getElementById('amortizationChart').getContext('2d');
+
+    // Check Theme
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+    const textColor = isDark ? '#94a3b8' : '#475569';
+    const tooltipBg = isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    const tooltipText = isDark ? '#f8fafc' : '#0f172a';
+
+    // Build unified labels set based on longest array
+    let combinedLabels = labelsA.length >= labelsB.length ? labelsA : labelsB;
+
+    // Pad the shorter dataset with the last known balance (0) to match length
+    let finalBalancesA = [...balancesA];
+    let finalBalancesB = [...balancesB];
+
+    while (finalBalancesA.length < combinedLabels.length) { finalBalancesA.push(0); }
+    while (finalBalancesB.length < combinedLabels.length) { finalBalancesB.push(0); }
+
+    const gradientA = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientA.addColorStop(0, 'rgba(37, 99, 235, 0.3)');
+    gradientA.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+    const gradientB = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientB.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+    gradientB.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+    const data = {
+        labels: combinedLabels,
+        datasets: [
+            {
+                label: 'Scenario A Balance',
+                data: finalBalancesA,
+                borderColor: '#2563eb',
+                backgroundColor: gradientA,
+                borderWidth: 3,
+                fill: true,
+                pointBackgroundColor: '#ec4899',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.4
+            },
+            {
+                label: 'Scenario B Balance',
+                data: finalBalancesB,
+                borderColor: '#10b981',
+                backgroundColor: gradientB,
+                borderWidth: 3,
+                fill: true,
+                pointBackgroundColor: '#f59e0b',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.4
+            }
+        ]
+    };
+
+    const config = {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: { color: textColor, font: { family: "'Outfit', sans-serif" } }
+                },
+                tooltip: {
+                    backgroundColor: tooltipBg,
+                    titleColor: tooltipText,
+                    bodyColor: textColor,
+                    borderColor: 'rgba(0,0,0,0.1)',
+                    borderWidth: 1,
+                    titleFont: { family: "'Outfit', sans-serif", size: 13, weight: 'bold' },
+                    bodyFont: { family: "'Outfit', sans-serif", size: 14, weight: '500' },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function (context) {
+                            return context.dataset.label.replace(' Balance', '') + ': ' + formatCurrency(context.raw);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false, drawBorder: false },
+                    ticks: { color: textColor, font: { family: "'Outfit', sans-serif" } }
+                },
+                y: {
+                    grid: { color: gridColor, drawBorder: false },
+                    ticks: {
+                        color: textColor,
+                        font: { family: "'Outfit', sans-serif" },
+                        callback: function (value) { return '$' + (value / 1000) + 'k'; }
+                    }
+                }
+            }
+        }
+    };
+
+    if (amortizationChartInstance) {
+        amortizationChartInstance.data = data;
+        amortizationChartInstance.options.scales.x.ticks.color = textColor;
+        amortizationChartInstance.options.scales.y.ticks.color = textColor;
+        amortizationChartInstance.options.scales.y.grid.color = gridColor;
+        amortizationChartInstance.options.plugins.tooltip = config.options.plugins.tooltip;
+        amortizationChartInstance.options.plugins.legend = config.options.plugins.legend;
         amortizationChartInstance.update();
     } else {
         amortizationChartInstance = new Chart(ctx, config);
