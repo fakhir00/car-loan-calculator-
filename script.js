@@ -21,6 +21,19 @@ inputs.forEach(input => {
 function updateTermDisplay() {
     const term = document.getElementById('loan-term').value;
     document.getElementById('term-display').textContent = `${term} months`;
+
+    // Auto-update quick terms buttons visually
+    document.querySelectorAll('.term-btn').forEach(btn => btn.classList.remove('active'));
+    if (term == 36) document.querySelector('.term-btn[onclick="setTerm(36)"]').classList.add('active');
+    if (term == 60) document.querySelector('.term-btn[onclick="setTerm(60)"]').classList.add('active');
+    if (term == 72) document.querySelector('.term-btn[onclick="setTerm(72)"]').classList.add('active');
+}
+
+// Handler for custom Quick Terms
+function setTerm(months) {
+    document.getElementById('loan-term').value = months;
+    updateTermDisplay();
+    calculateLoan();
 }
 
 // Calculate the loan details
@@ -74,15 +87,15 @@ function calculateLoan() {
 function updateChart(principal, totalInterest) {
     const ctx = document.getElementById('loanChart').getContext('2d');
 
-    // Gradient for Principal
+    // Gradient for Principal (Cyan Glow)
     const gradientPrincipal = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientPrincipal.addColorStop(0, 'rgba(59, 130, 246, 1)');
-    gradientPrincipal.addColorStop(1, 'rgba(59, 130, 246, 0.6)');
+    gradientPrincipal.addColorStop(0, '#00F2FE');
+    gradientPrincipal.addColorStop(1, '#4FACFE');
 
-    // Gradient for Interest
+    // Gradient for Interest (Magenta Pulse)
     const gradientInterest = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientInterest.addColorStop(0, 'rgba(249, 115, 22, 1)');
-    gradientInterest.addColorStop(1, 'rgba(249, 115, 22, 0.6)');
+    gradientInterest.addColorStop(0, '#D946EF');
+    gradientInterest.addColorStop(1, '#6F3A6E');
 
     const data = {
         labels: ['Total Principal', 'Total Interest'],
@@ -90,7 +103,7 @@ function updateChart(principal, totalInterest) {
             data: [principal, totalInterest],
             backgroundColor: [gradientPrincipal, gradientInterest],
             borderWidth: 0,
-            hoverOffset: 10
+            hoverOffset: 25 // Increased for Antigravity hover effect
         }]
     };
 
@@ -100,27 +113,30 @@ function updateChart(principal, totalInterest) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '75%',
+            cutout: '80%', // Thinner ring for futuristic look
             plugins: {
                 legend: {
-                    position: 'right',
+                    position: 'bottom',
                     labels: {
-                        color: '#f8fafc',
+                        color: '#E2E8F0',
                         font: {
-                            family: "'Outfit', sans-serif",
-                            size: 13
+                            family: "'Inter', sans-serif",
+                            size: 12,
+                            letterSpacing: '0.1em'
                         },
-                        padding: 20,
+                        padding: 30,
                         usePointStyle: true,
                         pointStyle: 'circle'
                     }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    titleFont: { family: "'Outfit', sans-serif", size: 13 },
-                    bodyFont: { family: "'Outfit', sans-serif", size: 14 },
-                    padding: 12,
-                    cornerRadius: 8,
+                    backgroundColor: 'rgba(9, 10, 15, 0.9)',
+                    titleFont: { family: "'Montserrat', sans-serif", size: 13 },
+                    bodyFont: { family: "'Space Mono', monospace", size: 14 },
+                    padding: 16,
+                    cornerRadius: 12,
+                    borderColor: 'rgba(0, 242, 254, 0.3)',
+                    borderWidth: 1,
                     displayColors: false,
                     callbacks: {
                         label: function (context) {

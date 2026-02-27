@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DrivePredict - Advanced Car Loan Predictor</title>
-    <meta name="description" content="Calculate your car loan payments instantly with our dynamic, interactive predictor. Explore total costs, interest rates, and more with stunning visualizations.">
+    <meta name="description"
+        content="Calculate your car loan payments instantly with our dynamic, interactive predictor. Explore total costs, interest rates, and more with stunning visualizations.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Montserrat:wght@300;600&display=swap"
+        rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <!-- Feather Icons for lightweight SVGs -->
+    <script src="https://unpkg.com/feather-icons"></script>
 </head>
+
 <body>
     <!-- Background Elements for Glassmorphism -->
     <div class="blob shape-1"></div>
@@ -20,10 +27,24 @@
 
     <header>
         <div class="container">
-            <h1 class="logo">Drive<span>Predict</span></h1>
+            <h1 class="logo">
+                <svg class="logo-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="url(#cyan-gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="cyan-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00F2FE" />
+                            <stop offset="100%" stop-color="#4FACFE" />
+                        </linearGradient>
+                    </defs>
+                    <polygon
+                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                    </polygon>
+                </svg>
+                LuxAuto <span>Finance</span>
+            </h1>
             <nav>
-                <a href="#calculator">Calculator</a>
-                <a href="#insights">Insights</a>
+                <a href="#calculator" class="nav-link">Calculator</a>
+                <a href="#insights" class="nav-link">Insights</a>
             </nav>
         </div>
     </header>
@@ -31,7 +52,8 @@
     <main class="container">
         <section class="hero text-center">
             <h2>Plan Your Next Vehicle with Precision.</h2>
-            <p>Experience the ultimate car loan prediction tool. Interactive graphs, dynamic insights, and all the clarity you need to hit the road confidently.</p>
+            <p>Experience the ultimate car loan prediction tool. Interactive graphs, dynamic insights, and all the
+                clarity you need to hit the road confidently.</p>
         </section>
 
         <section id="calculator" class="calculator-container glass">
@@ -39,25 +61,38 @@
                 <h3>Loan Details</h3>
                 <div class="input-group">
                     <label for="car-price">Car Price ($)</label>
-                    <input type="number" id="car-price" placeholder="e.g., 35000" value="35000" oninput="calculateLoan()">
-                </div>
-                
-                <div class="input-group">
-                    <label for="down-payment">Down Payment ($)</label>
-                    <input type="number" id="down-payment" placeholder="e.g., 5000" value="5000" oninput="calculateLoan()">
+                    <input type="number" id="car-price" placeholder="e.g., 35000" value="35000"
+                        oninput="calculateLoan()">
                 </div>
 
                 <div class="input-group">
-                    <label for="loan-term">Loan Term (Months)</label>
+                    <label for="down-payment">Down Payment ($)</label>
+                    <input type="number" id="down-payment" placeholder="e.g., 5000" value="5000"
+                        oninput="calculateLoan()">
+                </div>
+
+                <div class="input-group">
+                    <label>Quick Terms</label>
+                    <div class="quick-terms">
+                        <button class="term-btn" onclick="setTerm(36)">3 Yr</button>
+                        <button class="term-btn active" onclick="setTerm(60)">5 Yr</button>
+                        <button class="term-btn" onclick="setTerm(72)">6 Yr</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="loan-term">Custom Term (Months)</label>
                     <div class="range-container">
-                        <input type="range" id="loan-term" min="12" max="84" step="12" value="60" oninput="updateTermDisplay(); calculateLoan()">
+                        <input type="range" id="loan-term" min="12" max="84" step="12" value="60"
+                            oninput="updateTermDisplay(); calculateLoan()">
                         <span id="term-display">60 months</span>
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label for="interest-rate">Interest Rate (%)</label>
-                    <input type="number" id="interest-rate" step="0.1" placeholder="e.g., 4.5" value="4.5" oninput="calculateLoan()">
+                    <input type="number" id="interest-rate" step="0.1" placeholder="e.g., 4.5" value="4.5"
+                        oninput="calculateLoan()">
                 </div>
             </div>
 
@@ -67,24 +102,31 @@
                     <h4 id="monthly-payment">$559.29</h4>
                     <span>Estimated Monthly Payment</span>
                 </div>
-                
+
                 <div class="chart-container">
                     <canvas id="loanChart"></canvas>
                 </div>
 
                 <div class="secondary-results">
-                    <div class="result-card glass-card">
+                    <div class="result-card glass-card hover-lift">
                         <span>Total Principal</span>
-                        <h5 id="total-principal">$30,000.00</h5>
+                        <h5 id="total-principal" class="holographic-text">$30,000.00</h5>
                     </div>
-                    <div class="result-card glass-card">
+                    <div class="result-card glass-card hover-lift">
                         <span>Total Interest</span>
-                        <h5 id="total-interest">$3,557.40</h5>
+                        <h5 id="total-interest" class="holographic-text magenta-glow">$3,557.40</h5>
                     </div>
-                    <div class="result-card glass-card">
+                    <div class="result-card glass-card hover-lift">
                         <span>Total Cost</span>
-                        <h5 id="total-cost">$33,557.40</h5>
+                        <h5 id="total-cost" class="holographic-text gold-glow">$33,557.40</h5>
                     </div>
+                </div>
+
+                <!-- Utilities Array -->
+                <div class="utility-actions">
+                    <button class="icon-btn" title="Copy Link"><i data-feather="link"></i></button>
+                    <button class="icon-btn" title="Save as PDF"><i data-feather="download"></i></button>
+                    <button class="icon-btn" title="Compare Scenarios"><i data-feather="copy"></i></button>
                 </div>
             </div>
         </section>
@@ -94,15 +136,21 @@
             <div class="grid-content">
                 <div class="content-card">
                     <h3>Understand the True Cost</h3>
-                    <p>Many buyers focus solely on the monthly payment. Our interactive predictor instantly breaks down how much of your money goes towards the principal versus the interest over the lifetime of your loan, allowing you to see the real price of your dream car.</p>
+                    <p>Many buyers focus solely on the monthly payment. Our interactive predictor instantly breaks down
+                        how much of your money goes towards the principal versus the interest over the lifetime of your
+                        loan, allowing you to see the real price of your dream car.</p>
                 </div>
                 <div class="content-card">
                     <h3>Optimize Your Term</h3>
-                    <p>Extending a loan from 60 to 72 months might lower your monthly bills, but drastically increases your total interest paid. Use the dynamic slider above to easily visualize the trade-offs and find the financial sweet spot that fits your budget.</p>
+                    <p>Extending a loan from 60 to 72 months might lower your monthly bills, but drastically increases
+                        your total interest paid. Use the dynamic slider above to easily visualize the trade-offs and
+                        find the financial sweet spot that fits your budget.</p>
                 </div>
                 <div class="content-card">
                     <h3>Plan Your Down Payment</h3>
-                    <p>Putting more money down upfront reduces the principal amount you need to borrow. Experiment with the down payment field to see exactly how your upfront investment shrinks your long-term obligations and safeguards your financial future.</p>
+                    <p>Putting more money down upfront reduces the principal amount you need to borrow. Experiment with
+                        the down payment field to see exactly how your upfront investment shrinks your long-term
+                        obligations and safeguards your financial future.</p>
                 </div>
             </div>
         </section>
@@ -114,6 +162,11 @@
         </div>
     </footer>
 
+    <script>
+        // Initialize Feather icons immediately
+        feather.replace();
+    </script>
     <script src="script.js"></script>
 </body>
+
 </html>
