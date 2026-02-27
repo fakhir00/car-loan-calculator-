@@ -21,19 +21,6 @@ inputs.forEach(input => {
 function updateTermDisplay() {
     const term = document.getElementById('loan-term').value;
     document.getElementById('term-display').textContent = `${term} months`;
-
-    // Auto-update quick terms buttons visually
-    document.querySelectorAll('.term-btn').forEach(btn => btn.classList.remove('active'));
-    if (term == 36) document.querySelector('.term-btn[onclick="setTerm(36)"]').classList.add('active');
-    if (term == 60) document.querySelector('.term-btn[onclick="setTerm(60)"]').classList.add('active');
-    if (term == 72) document.querySelector('.term-btn[onclick="setTerm(72)"]').classList.add('active');
-}
-
-// Handler for custom Quick Terms
-function setTerm(months) {
-    document.getElementById('loan-term').value = months;
-    updateTermDisplay();
-    calculateLoan();
 }
 
 // Calculate the loan details
@@ -87,15 +74,15 @@ function calculateLoan() {
 function updateChart(principal, totalInterest) {
     const ctx = document.getElementById('loanChart').getContext('2d');
 
-    // Gradient for Principal (Cyan Glow)
+    // Gradient for Principal - Trusting Blue
     const gradientPrincipal = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientPrincipal.addColorStop(0, '#00F2FE');
-    gradientPrincipal.addColorStop(1, '#4FACFE');
+    gradientPrincipal.addColorStop(0, '#2563eb');
+    gradientPrincipal.addColorStop(1, '#60a5fa');
 
-    // Gradient for Interest (Magenta Pulse)
+    // Gradient for Interest - Energetic Coral/Pink
     const gradientInterest = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientInterest.addColorStop(0, '#D946EF');
-    gradientInterest.addColorStop(1, '#6F3A6E');
+    gradientInterest.addColorStop(0, '#ec4899');
+    gradientInterest.addColorStop(1, '#f472b6');
 
     const data = {
         labels: ['Total Principal', 'Total Interest'],
@@ -103,7 +90,7 @@ function updateChart(principal, totalInterest) {
             data: [principal, totalInterest],
             backgroundColor: [gradientPrincipal, gradientInterest],
             borderWidth: 0,
-            hoverOffset: 25 // Increased for Antigravity hover effect
+            hoverOffset: 10
         }]
     };
 
@@ -113,31 +100,33 @@ function updateChart(principal, totalInterest) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '80%', // Thinner ring for futuristic look
+            cutout: '75%',
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'right',
                     labels: {
-                        color: '#E2E8F0',
+                        color: '#0f172a',
                         font: {
-                            family: "'Inter', sans-serif",
-                            size: 12,
-                            letterSpacing: '0.1em'
+                            family: "'Outfit', sans-serif",
+                            size: 13,
+                            weight: '500'
                         },
-                        padding: 30,
+                        padding: 20,
                         usePointStyle: true,
                         pointStyle: 'circle'
                     }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(9, 10, 15, 0.9)',
-                    titleFont: { family: "'Montserrat', sans-serif", size: 13 },
-                    bodyFont: { family: "'Space Mono', monospace", size: 14 },
-                    padding: 16,
-                    cornerRadius: 12,
-                    borderColor: 'rgba(0, 242, 254, 0.3)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#0f172a',
+                    bodyColor: '#475569',
+                    borderColor: 'rgba(0,0,0,0.1)',
                     borderWidth: 1,
-                    displayColors: false,
+                    titleFont: { family: "'Outfit', sans-serif", size: 13, weight: 'bold' },
+                    bodyFont: { family: "'Outfit', sans-serif", size: 14, weight: '500' },
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: true,
                     callbacks: {
                         label: function (context) {
                             return context.label + ': ' + formatCurrency(context.raw);
@@ -155,6 +144,8 @@ function updateChart(principal, totalInterest) {
 
     if (loanChartInstance) {
         loanChartInstance.data = data;
+        loanChartInstance.options.plugins.tooltip = config.options.plugins.tooltip;
+        loanChartInstance.options.plugins.legend = config.options.plugins.legend;
         loanChartInstance.update();
     } else {
         loanChartInstance = new Chart(ctx, config);
