@@ -98,12 +98,21 @@ function calculateLoan() {
     const tcoFuel = parseFloat(document.getElementById('tco-fuel').value) || 0;
     const tcoMaint = parseFloat(document.getElementById('tco-maint').value) || 0;
 
+    // New Fee Inputs
+    const salesTaxRate = parseFloat(document.getElementById('sales-tax').value) || 0;
+    const titleFees = parseFloat(document.getElementById('title-fees').value) || 0;
+    const dealerFees = parseFloat(document.getElementById('dealer-fees').value) || 0;
+
     const price = parseFloat(priceInput) || 0;
     const downPayment = parseFloat(downPaymentInput) || 0;
     let annualRate = parseFloat(rateInput) || 0;
     const extraPayment = parseFloat(extraPaymentInput) || 0;
 
-    const originalPrincipal = Math.max(0, price - downPayment);
+    // Calculate True Out-The-Door (OTD) Principal
+    const taxAmount = price * (salesTaxRate / 100);
+    const totalFees = titleFees + dealerFees;
+    const originalPrincipal = Math.max(0, (price + taxAmount + totalFees) - downPayment);
+
     const monthlyRate = (annualRate / 100) / 12;
     const numberOfPayments = termValue;
 
@@ -269,6 +278,9 @@ function calculateAffordability() {
     const totalInterest = (budget * numberOfPayments) - maxLoanAmount;
     const totalCost = maxVehiclePrice + totalInterest;
 
+    // Hide Deal Rating
+    updateDealRating(0, 0, 0);
+
     // --- Update Affordability DOM Elements ---
     document.getElementById('main-result-value').textContent = formatCurrency(maxVehiclePrice);
     document.getElementById('card-1-val').textContent = formatCurrency(maxLoanAmount);
@@ -281,7 +293,15 @@ function calculateAffordability() {
 
 // Background simulation for Scenario B
 function simulateLoan(price, downPayment, annualRate, termValue) {
-    const originalPrincipal = Math.max(0, price - downPayment);
+    // Grab Scenario B fees
+    const salesTaxRateB = parseFloat(document.getElementById('sales-tax-b').value) || 0;
+    const titleFeesB = parseFloat(document.getElementById('title-fees-b').value) || 0;
+    const dealerFeesB = parseFloat(document.getElementById('dealer-fees-b').value) || 0;
+
+    const taxAmountB = price * (salesTaxRateB / 100);
+    const totalFeesB = titleFeesB + dealerFeesB;
+    const originalPrincipal = Math.max(0, (price + taxAmountB + totalFeesB) - downPayment);
+
     const monthlyRate = (annualRate / 100) / 12;
     const numberOfPayments = termValue;
 
@@ -644,6 +664,78 @@ function updateAmortizationChartCompare(labelsA, balancesA, labelsB, balancesB) 
         amortizationChartInstance.update();
     } else {
         amortizationChartInstance = new Chart(ctx, config);
+    }
+}
+
+// --- Deal Rating Engine ---
+function updateDealRating(rate, term, principal, targetPrice) {
+    const container = document.getElementById('deal-rating-container');
+    const icon = document.getElementById('deal-rating-icon');
+    const text = document.getElementById('deal-rating-text');
+
+    if (currentMode === 'affordability' || principal <= 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden', 'rating-excellent', 'rating-good', 'rating-fair', 'rating-poor');
+
+    // Baseline Heuristics
+    // Excellent: Rate < 4%, Term <= 48m
+    // Good: Rate < 7%, Term <= 60m
+    // Fair: Rate < 10%, Term <= 72m
+    // Poor: Rate >= 10% OR Term > 72m
+
+    if (rate >= 10 || term > 72) {
+        container.classList.add('rating-poor');
+        icon.className = 'fas fa-exclamation-triangle';
+        text.textContent = 'High Cost Setup';
+    } else if (rate < 4 && term <= 48) {
+        container.classList.add('rating-excellent');
+        icon.className = 'fas fa-crown';
+        text.textContent = 'Excellent Deal';
+    } else if (rate < 7 && term <= 60) {
+        container.classList.add('rating-good');
+        icon.className = 'fas fa-check-circle';
+        text.textContent = 'Solid Setup';
+    } else {
+        container.classList.add('rating-fair');
+        icon.className = 'fas fa-info-circle';
+        text.textContent = 'Fair Deal';
+    }
+}
+
+// --- Deal Rating Engine ---
+function updateDealRating(rate, term, principal) {
+    const container = document.getElementById('deal-rating-container');
+    const icon = document.getElementById('deal-rating-icon');
+    const text = document.getElementById('deal-rating-text');
+
+    // Hide rating in alternative modes or if inputs are invalid
+    if (currentMode === 'affordability' || principal <= 0 || !container) {
+        if (container) container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden', 'rating-excellent', 'rating-good', 'rating-fair', 'rating-poor');
+
+    // Heuristic Rules
+    if (rate >= 10 || term >= 84) {
+        container.classList.add('rating-poor');
+        icon.className = 'fas fa-exclamation-triangle';
+        text.textContent = 'High Cost Setup';
+    } else if (rate <= 4.5 && term <= 48) {
+        container.classList.add('rating-excellent');
+        icon.className = 'fas fa-crown';
+        text.textContent = 'Excellent Terms';
+    } else if (rate <= 7.5 && term <= 60) {
+        container.classList.add('rating-good');
+        icon.className = 'fas fa-check-circle';
+        text.textContent = 'Solid Setup';
+    } else {
+        container.classList.add('rating-fair');
+        icon.className = 'fas fa-info-circle';
+        text.textContent = 'Fair Deal';
     }
 }
 
